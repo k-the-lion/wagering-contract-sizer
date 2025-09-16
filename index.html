@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20-Minute Trader - Wagering & Position Sizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .table-cell {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .header-cell {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+        input[type="number"], select {
+            border-radius: 0.375rem;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .lockout-red {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        .profit-green {
+            color: #16a34a;
+        }
+        .loss-red {
+            color: #dc2626;
+        }
+        .disabled-row {
+            background-color: #f3f4f6;
+            opacity: 0.7;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <header class="mb-6 pb-4 border-b border-gray-200">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">20-Minute Trader — Wagering & Position Sizer</h1>
+            <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                <h2 class="font-semibold mb-1">How to Use This Tool:</h2>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li><strong>Set Up Your Day:</strong> In the "Account Setup" and "Trade Setup" boxes, enter your daily account balance, loss limit, and the point range for your trades.</li>
+                    <li><strong>Configure Strategy:</strong> Adjust the "Ladder Logic" and "Sizing Parameters" to match your preferred trading style.</li>
+                    <li><strong>Get Position Size:</strong> The tool will instantly calculate your <strong>TP/SL Settings ($)</strong> and the correct <strong>Number of Contracts</strong>.</li>
+                    <li><strong>Log Trades:</strong> After each trade, enter the final P/L in the "Actual Result ($)" column in the Trade Log below.</li>
+                    <li><strong>Reset for New Day:</strong> When you are finished, simply refresh the page to start a new session.</li>
+                </ol>
+            </div>
+        </header>
+
+        <!-- Main Wagering Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Account Setup -->
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h3 class="font-semibold text-lg mb-3">Account Setup</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="currentBalance" class="block text-sm font-medium text-gray-700">Current Balance ($)</label>
+                        <input type="number" id="currentBalance" value="50000" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="maxLossLimit" class="block text-sm font-medium text-gray-700">Maximum Loss Limit ($)</label>
+                        <input type="number" id="maxLossLimit" value="48000" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="lossLockoutPercent" class="block text-sm font-medium text-gray-700">Loss Lockout %</label>
+                        <input type="number" id="lossLockoutPercent" value="0.125" step="0.001" class="mt-1">
+                    </div>
+                </div>
+            </div>
+            <!-- Trade Setup -->
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h3 class="font-semibold text-lg mb-3">Trade Setup</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="tradeRange" class="block text-sm font-medium text-gray-700">Trade Range (Points)</label>
+                        <input type="number" id="tradeRange" value="10" class="mt-1">
+                    </div>
+                     <div class="text-sm text-gray-500 pt-2">
+                        <p>Point Value is fixed at $2.00 for MNQ.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Ladder Logic -->
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h3 class="font-semibold text-lg mb-3">Ladder Logic</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label for="autoLadder" class="block text-sm font-medium text-gray-700">Auto Ladder when Green?</label>
+                        <select id="autoLadder" class="mt-1">
+                            <option value="true" selected>On</option>
+                            <option value="false">Off</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="minProfitToKeep" class="block text-sm font-medium text-gray-700">Absolute minimum profit ($)</label>
+                        <input type="number" id="minProfitToKeep" value="50" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="lockInPercent" class="block text-sm font-medium text-gray-700">Lock-in % of current green</label>
+                        <input type="number" id="lockInPercent" value="0.75" step="0.01" class="mt-1">
+                    </div>
+                </div>
+            </div>
+             <!-- Sizing Parameters -->
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h3 class="font-semibold text-lg mb-3">Sizing Parameters</h3>
+                 <div class="space-y-3">
+                    <div>
+                        <label for="roundDown" class="block text-sm font-medium text-gray-700">Round down to nearest $</label>
+                        <input type="number" id="roundDown" value="5" step="1" class="mt-1">
+                    </div>
+                    <div>
+                        <label for="feePerContract" class="block text-sm font-medium text-gray-700">Fee per Contract ($)</label>
+                        <input type="number" id="feePerContract" value="0.74" step="0.01" class="mt-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-emerald-600 text-white p-4 rounded-lg shadow-lg">
+                <p class="text-sm font-medium text-emerald-200">Full Stack ($)</p>
+                <p id="fullStack" class="text-2xl font-bold"></p>
+            </div>
+            <div class="bg-amber-500 text-white p-4 rounded-lg shadow-lg">
+                <p class="text-sm font-medium text-amber-100">Daily Loss Lockout ($)</p>
+                <p id="dailyLossLockout" class="text-2xl font-bold"></p>
+            </div>
+            <div class="bg-blue-600 text-white p-4 rounded-lg shadow-lg">
+                <p class="text-sm font-medium text-blue-200">TP/SL SETTINGS ($)</p>
+                <p id="nextTradeSize" class="text-2xl font-bold"></p>
+            </div>
+            <div class="bg-violet-600 text-white p-4 rounded-lg shadow-lg">
+                <p class="text-sm font-medium text-violet-200">NUMBER OF CONTRACTS</p>
+                <p id="numContracts" class="text-2xl font-bold">0</p>
+            </div>
+        </div>
+
+        <!-- Trade Log Table -->
+        <div class="mt-8 pt-6 border-t">
+             <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Trade Log</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 border">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="table-cell header-cell w-16">Trade #</th>
+                            <th class="table-cell header-cell">Recommended TP/SL ($)</th>
+                            <th class="table-cell header-cell bg-blue-100">Actual Result ($)</th>
+                            <th class="table-cell header-cell">Realized P&L ($)</th>
+                            <th class="table-cell header-cell">Lockout</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trade-rows" class="bg-white divide-y divide-gray-200">
+                        <!-- Rows will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NUM_TRADES = 50;
+
+        function getFloatValue(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function getBoolValue(id) {
+            return document.getElementById(id).value === 'true';
+        }
+        
+        function calculateContracts() {
+            const dollarRiskText = document.getElementById('nextTradeSize').textContent;
+            if (dollarRiskText === "LOCKED OUT") {
+                document.getElementById('numContracts').textContent = "N/A";
+                return;
+            }
+
+            const dollarRisk = parseFloat(dollarRiskText) || 0;
+            const tradeRange = getFloatValue('tradeRange');
+            const pointValue = 2; // Hardcoded for MNQ
+
+            const riskPerContract = tradeRange * pointValue;
+            
+            let numContracts = 0;
+            if (riskPerContract > 0) {
+                numContracts = Math.floor(dollarRisk / riskPerContract);
+            }
+            document.getElementById('numContracts').textContent = numContracts;
+        }
+
+        function calculate() {
+            // Get all parameters
+            const currentBalance = getFloatValue('currentBalance');
+            const maxLossLimit = getFloatValue('maxLossLimit');
+            const lossLockoutPercent = getFloatValue('lossLockoutPercent');
+            const roundDown = getFloatValue('roundDown');
+            const autoLadder = getBoolValue('autoLadder');
+            const minProfitToKeep = getFloatValue('minProfitToKeep');
+            const lockInPercent = getFloatValue('lockInPercent');
+            const feePerContract = getFloatValue('feePerContract');
+
+            // Initial calculations
+            const fullStack = currentBalance - maxLossLimit;
+            const dailyLossLockout = fullStack * lossLockoutPercent;
+            
+            document.getElementById('fullStack').textContent = fullStack.toFixed(2);
+            document.getElementById('dailyLossLockout').textContent = `-${dailyLossLockout.toFixed(2)}`;
+
+            let runningPL = 0;
+            let isLockedOut = false;
+            let nextTradeSizeFound = false;
+
+            for (let i = 1; i <= NUM_TRADES; i++) {
+                const resultInput = document.getElementById(`result-${i}`);
+                const recommendedTpslSpan = document.getElementById(`recommended-tpsl-${i}`);
+                const runningPlSpan = document.getElementById(`running-pl-${i}`);
+                const lockoutSpan = document.getElementById(`lockout-${i}`);
+
+                const prevRunningPL = (i === 1) ? 0 : parseFloat(document.getElementById(`running-pl-${i - 1}`).textContent) || 0;
+
+                let recommendedTpsl = 0;
+                if (!isLockedOut) {
+                    const tradeRange = getFloatValue('tradeRange');
+                    const pointValue = 2; // Hardcoded
+                    const riskPerContract = tradeRange * pointValue;
+
+                    let rawRisk = 0;
+                    if (i === 1) {
+                        rawRisk = dailyLossLockout * 0.5;
+                    } else {
+                        if (autoLadder && prevRunningPL > 0) {
+                            const profitToRisk = prevRunningPL - Math.max(minProfitToKeep, prevRunningPL * lockInPercent);
+                            rawRisk = profitToRisk;
+                        } else {
+                            rawRisk = (dailyLossLockout + prevRunningPL) * 0.5;
+                        }
+                    }
+
+                    let numContractsForFee = 0;
+                    if (riskPerContract > 0) {
+                        numContractsForFee = Math.floor(rawRisk / riskPerContract);
+                    }
+                    const totalFee = numContractsForFee * feePerContract;
+
+                    const finalRisk = rawRisk - totalFee;
+                    recommendedTpsl = Math.floor(Math.max(0, finalRisk) / roundDown) * roundDown;
+                }
+                recommendedTpslSpan.textContent = recommendedTpsl.toFixed(2);
+                
+                if (!isLockedOut && !nextTradeSizeFound) {
+                    if (resultInput.value.trim() === '') {
+                       document.getElementById('nextTradeSize').textContent = recommendedTpsl.toFixed(2);
+                       nextTradeSizeFound = true; 
+                    }
+                }
+
+                const actualResult = parseFloat(resultInput.value) || 0;
+                runningPL = prevRunningPL + actualResult;
+
+                runningPlSpan.textContent = runningPL.toFixed(2);
+                runningPlSpan.classList.toggle('profit-green', runningPL > 0);
+                runningPlSpan.classList.toggle('loss-red', runningPL < 0);
+
+                let lockoutMsg = "";
+                if (dailyLossLockout > 0 && runningPL <= -dailyLossLockout) {
+                    lockoutMsg = "LOCKOUT (Daily Loss)";
+                    isLockedOut = true;
+                } else if (autoLadder && prevRunningPL > 0 && actualResult < 0) {
+                    lockoutMsg = "LOCKOUT (Ladder Loss)";
+                    isLockedOut = true;
+                }
+                lockoutSpan.textContent = lockoutMsg;
+                lockoutSpan.classList.add('lockout-red');
+
+                if (isLockedOut) {
+                    for (let j = i + 1; j <= NUM_TRADES; j++) {
+                        document.getElementById(`trade-row-${j}`).classList.add('disabled-row');
+                        document.getElementById(`result-${j}`).disabled = true;
+                    }
+                }
+            }
+            
+            if (isLockedOut) {
+                document.getElementById('nextTradeSize').textContent = "LOCKED OUT";
+                document.getElementById('nextTradeSize').parentElement.classList.add('bg-red-600');
+                document.getElementById('nextTradeSize').parentElement.classList.remove('bg-blue-600');
+            } else {
+                document.getElementById('nextTradeSize').parentElement.classList.remove('bg-red-600');
+                document.getElementById('nextTradeSize').parentElement.classList.add('bg-blue-600');
+                if (!nextTradeSizeFound) {
+                   const lastRunningPL = parseFloat(document.getElementById(`running-pl-${NUM_TRADES}`).textContent) || 0;
+                   const tradeRange = getFloatValue('tradeRange');
+                   const pointValue = 2; // Hardcoded
+                   const riskPerContract = tradeRange * pointValue;
+                   
+                   let rawRisk = 0;
+                   if (autoLadder && lastRunningPL > 0) {
+                       const profitToRisk = lastRunningPL - Math.max(minProfitToKeep, lastRunningPL * lockInPercent);
+                       rawRisk = profitToRisk;
+                   } else {
+                       rawRisk = (dailyLossLockout + lastRunningPL) * 0.5;
+                   }
+
+                   let numContractsForFee = 0;
+                   if (riskPerContract > 0) {
+                       numContractsForFee = Math.floor(rawRisk / riskPerContract);
+                   }
+                   const totalFee = numContractsForFee * feePerContract;
+
+                   const finalRisk = rawRisk - totalFee;
+                   const finalTradeSize = Math.floor(Math.max(0, finalRisk) / roundDown) * roundDown;
+                   document.getElementById('nextTradeSize').textContent = finalTradeSize.toFixed(2);
+                }
+            }
+            
+            calculateContracts();
+        }
+
+        function createTradeRows() {
+            const tbody = document.getElementById('trade-rows');
+            for (let i = 1; i <= NUM_TRADES; i++) {
+                const row = document.createElement('tr');
+                row.id = `trade-row-${i}`;
+                row.innerHTML = `
+                    <td class="table-cell font-medium">${i}</td>
+                    <td class="table-cell font-mono"><span id="recommended-tpsl-${i}">0.00</span></td>
+                    <td class="table-cell bg-blue-50">
+                        <input type="number" id="result-${i}" class="result-input font-mono" placeholder="0.00" step="0.01">
+                    </td>
+                    <td class="table-cell font-mono font-semibold"><span id="running-pl-${i}">0.00</span></td>
+                    <td class="table-cell"><span id="lockout-${i}"></span></td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createTradeRows();
+            
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => input.addEventListener('input', calculate));
+            
+            calculate(); // Initial calculation
+        });
+    </script>
+</body>
+</html>
