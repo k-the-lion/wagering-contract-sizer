@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wagering & Position Sizer</title>
+    <title>20-Minute Trader - Wagering & Position Sizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -71,7 +71,7 @@
                     <li><strong>Set Up Your Day:</strong> Enter your account and trade parameters in the boxes above.</li>
                     <li>**Log Trades:** After each trade, enter the P/L and log a **Screenshot Link** and **Notes** in the log below.</li>
                     <li>**Complete Journal:** At the end of the session, fill out the **R.E.A.L.I.S.T. Journal** questions at the bottom.</li>
-                    <li><strong>Export Data:</strong> Click the **Download Results (CSV)** button to save all data and journal entries.</li>
+                    <li><strong>Export Data:</strong> Click the **Download buttons** to save your filtered Trade Log and separate Journal entries.</li>
                     <li><strong>Reset:</strong> Refresh the page to start a new day.</li>
                 </ol>
             </div>
@@ -164,12 +164,20 @@
         <div class="mt-8 pt-6 border-t">
              <div class="flex justify-between items-center mb-4">
                  <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Trade Log</h2>
-                 <button 
-                     id="downloadCsvButton"
-                     onclick="exportTableToCSV()" 
-                     class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm">
-                     Download Results (CSV)
-                 </button>
+                 <div class="space-x-2">
+                    <button 
+                        id="downloadTradeLogButton"
+                        onclick="exportTradeLogToCSV()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm">
+                        Download Trade Log (CSV)
+                    </button>
+                    <button 
+                        id="downloadJournalButton"
+                        onclick="exportJournalToCSV()" 
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm">
+                        Download R.E.A.L.I.S.T. Journal (CSV)
+                    </button>
+                 </div>
              </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 border" id="tradeLogTable">
@@ -210,45 +218,45 @@
                         </select>
                     </div>
                     <div>
-                        <label for="ratingReason" class="block text-sm font-medium text-gray-700 mb-1">Why did you give it that score? (Source: Why did you give it that score?) [cite_start][cite: 6]</label>
+                        <label for="ratingReason" class="block text-sm font-medium text-gray-700 mb-1">Why did you give it that score?</label>
                         <textarea id="ratingReason" rows="2" class="journal-input" placeholder="My score reflects my discipline and market read..."></textarea>
                     </div>
                 </div>
 
                 <div class="p-4 bg-white rounded-lg border border-gray-200">
                     <h3 class="font-semibold text-lg text-blue-600 mb-2">E - Earnings</h3>
-                    <label for="earningsNote" class="block text-sm font-medium text-gray-700 mb-1">Were you profitable today? [cite_start]If not, what was the loss and why? [cite: 8, 9]</label>
+                    <label for="earningsNote" class="block text-sm font-medium text-gray-700 mb-1">Were you profitable today? If not, what was the loss and why?</label>
                     <textarea id="earningsNote" rows="2" class="journal-input" placeholder="I was profitable by $X, or I lost $X because..."></textarea>
                 </div>
                 
                 <div class="p-4 bg-white rounded-lg border border-gray-200">
                     <h3 class="font-semibold text-lg text-emerald-600 mb-2">A - Alignment</h3>
-                    <label for="alignmentNote" class="block text-sm font-medium text-gray-700 mb-1">Did you follow your trading strategy today? [cite_start]If not, what caused you to go off-strategy? [cite: 11, 12]</label>
+                    <label for="alignmentNote" class="block text-sm font-medium text-gray-700 mb-1">Did you follow your trading strategy today? If not, what caused you to go off-strategy?</label>
                     <textarea id="alignmentNote" rows="2" class="journal-input" placeholder="Yes, I stuck to my plan, or No, fear/greed caused me to..."></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="p-4 bg-white rounded-lg border border-gray-200">
                         <h3 class="font-semibold text-lg text-amber-600 mb-2">L - Learning</h3>
-                        [cite_start]<label for="learningNote" class="block text-sm font-medium text-gray-700 mb-1">What did you learn from the market, your behavior, or your decisions today? [cite: 14]</label>
+                        <label for="learningNote" class="block text-sm font-medium text-gray-700 mb-1">What did you learn from the market, your behavior, or your decisions today?</label>
                         <textarea id="learningNote" rows="3" class="journal-input" placeholder="The market respects the 9:45 AM pivot..."></textarea>
                     </div>
                     <div class="p-4 bg-white rounded-lg border border-gray-200">
                         <h3 class="font-semibold text-lg text-purple-600 mb-2">I - Improvements</h3>
-                        <label for="improvementNote" class="block text-sm font-medium text-gray-700 mb-1">What could you have done better? [cite_start]How will you correct or prevent that? [cite: 16, 17]</label>
+                        <label for="improvementNote" class="block text-sm font-medium text-gray-700 mb-1">What could you have done better? How will you correct or prevent that?</label>
                         <textarea id="improvementNote" rows="3" class="journal-input" placeholder="I should have waited for confirmation. Next time, I will..."></textarea>
                     </div>
                 </div>
 
                 <div class="p-4 bg-white rounded-lg border border-gray-200">
                     <h3 class="font-semibold text-lg text-cyan-600 mb-2">S - Sorry</h3>
-                    <label for="sorryNote" class="block text-sm font-medium text-gray-700 mb-1">Do you regret any trades? [cite_start]What would you change if you could redo it? [cite: 19, 20]</label>
+                    <label for="sorryNote" class="block text-sm font-medium text-gray-700 mb-1">Do you regret any trades? What would you change if you could redo it?</label>
                     <textarea id="sorryNote" rows="2" class="journal-input" placeholder="I regret Trade #4. I would change my stop-loss placement..."></textarea>
                 </div>
 
                 <div class="p-4 bg-white rounded-lg border border-gray-200">
                     <h3 class="font-semibold text-lg text-pink-600 mb-2">T - Trading Plan (Tomorrow)</h3>
-                    <label for="tomorrowPlan" class="block text-sm font-medium text-gray-700 mb-1">What's your exact plan for tomorrow's trading? [cite_start]Be specific. [cite: 21, 22]</label>
+                    <label for="tomorrowPlan" class="block text-sm font-medium text-gray-700 mb-1">What's your exact plan for tomorrow's trading? Be specific.</label>
                     <textarea id="tomorrowPlan" rows="3" class="journal-input" placeholder="I will only trade between 9:30-10:00 AM, focusing on a breakout past 18550 with 2 contracts risked at $100 per trade..."></textarea>
                 </div>
             </div>
@@ -259,6 +267,125 @@
     <script>
         const NUM_TRADES = 50;
 
+        // Utility function for downloading CSV
+        function downloadCSV(csvString, filename) {
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) { 
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                alert("Your browser does not support automatic downloads. Please copy the data manually.");
+            }
+        }
+        
+        // Utility function to get value from input/textarea and clean it for CSV
+        function getCleanedValue(element) {
+            let text = element ? (element.value || element.innerText || '').trim() : '';
+            text = text.replace(/"/g, '""'); // Escape double quotes
+            if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                text = `"${text}"`; // Enclose if it contains delimiter, newline, or quotes
+            }
+            return text;
+        }
+
+        // --- EXPORT TRADE LOG FUNCTION (FILTERED) ---
+        function exportTradeLogToCSV() {
+            const table = document.getElementById('tradeLogTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+
+            // 1. Get Header Row
+            const headerRow = rows[0];
+            const headerCols = headerRow.querySelectorAll('th');
+            let headerData = [];
+            for (let i = 0; i < headerCols.length; i++) {
+                headerData.push(getCleanedValue(headerCols[i]));
+            }
+            csv.push(headerData.join(','));
+
+
+            // 2. Get Data Rows (Only those with Actual Result)
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const resultInput = row.querySelector(`#result-${i}`);
+                
+                // Check if the 'Actual Result ($)' input is filled. If not, skip the row.
+                if (!resultInput || resultInput.value.trim() === '') {
+                    continue; 
+                }
+
+                const cols = row.querySelectorAll('td');
+                let rowData = [];
+
+                for (let j = 0; j < cols.length; j++) {
+                    const col = cols[j];
+                    
+                    // Look for input fields within the cell
+                    const input = col.querySelector('input, textarea');
+                    if (input) {
+                        rowData.push(getCleanedValue(input));
+                    } else {
+                        // Use innerText for spans (Recommended TP/SL, P&L, Lockout)
+                        rowData.push(getCleanedValue(col));
+                    }
+                }
+                csv.push(rowData.join(','));
+            }
+
+            const csvString = csv.join('\n');
+            const filename = `TradeLog_Filtered_${new Date().toLocaleDateString('en-CA').replace(/-/g, '')}.csv`;
+            
+            downloadCSV(csvString, filename);
+        }
+
+        // --- EXPORT REALIST JOURNAL FUNCTION (SEPARATE) ---
+        function exportJournalToCSV() {
+            let csv = [];
+            csv.push('Journal Field,Value');
+            
+            const realistData = [
+                { label: 'R - Rating', elementId: 'ratingScore' },
+                { label: 'R - Rating Reason', elementId: 'ratingReason' },
+                { label: 'E - Earnings Note', elementId: 'earningsNote' },
+                { label: 'A - Alignment Note', elementId: 'alignmentNote' },
+                { label: 'L - Learning Note', elementId: 'learningNote' },
+                { label: 'I - Improvement Note', elementId: 'improvementNote' },
+                { label: 'S - Sorry Note', elementId: 'sorryNote' },
+                { label: 'T - Tomorrow Plan', elementId: 'tomorrowPlan' },
+            ];
+
+            realistData.forEach(item => {
+                const element = document.getElementById(item.elementId);
+                let value = '';
+
+                if (element.tagName === 'SELECT') {
+                    // For the rating dropdown, capture both the number and the text description
+                    value = element.value + ' - ' + element.options[element.selectedIndex].text;
+                } else {
+                    // For textarea/text inputs
+                    value = element.value;
+                }
+                
+                csv.push(`${getCleanedValue({innerText: item.label})},${getCleanedValue({value: value})}`);
+            });
+            
+
+            const csvString = csv.join('\n');
+            const filename = `REALIST_Journal_${new Date().toLocaleDateString('en-CA').replace(/-/g, '')}.csv`;
+            
+            downloadCSV(csvString, filename);
+        }
+        
+        // --- EXISTING CALCULATION AND ROW CREATION LOGIC ---
+        
         function getFloatValue(id) {
             return parseFloat(document.getElementById(id).value) || 0;
         }
@@ -430,90 +557,6 @@
             
             calculateContracts();
         }
-
-
-        // --- FUNCTION TO EXPORT TABLE AND JOURNAL TO CSV ---
-        function exportTableToCSV() {
-            const table = document.getElementById('tradeLogTable');
-            const rows = table.querySelectorAll('tr');
-            let csv = [];
-
-            // 1. Trade Log Data
-            // Loop through all rows (including header)
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const cols = row.querySelectorAll('td, th');
-                let rowData = [];
-
-                for (let j = 0; j < cols.length; j++) {
-                    const col = cols[j];
-                    let text = '';
-                    
-                    // Special handling for input fields
-                    if (i > 0) { 
-                        const input = col.querySelector('input');
-                        if (input) {
-                            text = input.value;
-                        } else {
-                            text = col.innerText.trim();
-                        }
-                    } else {
-                        text = col.innerText.trim();
-                    }
-
-                    // Clean and escape text for CSV
-                    text = text.replace(/"/g, '""'); 
-                    if (text.includes(',') || text.includes('\n') || text.includes('"')) {
-                        text = `"${text}"`;
-                    }
-                    rowData.push(text);
-                }
-                csv.push(rowData.join(','));
-            }
-
-            // 2. Add REALIST Journal Data
-            csv.push('\n\n--- R.E.A.L.I.S.T. JOURNAL ---');
-            
-            const realistData = [
-                { label: 'R - Rating', value: document.getElementById('ratingScore').value + ' - ' + document.getElementById('ratingScore').options[document.getElementById('ratingScore').selectedIndex].text },
-                { label: 'R - Rating Reason', value: document.getElementById('ratingReason').value },
-                { label: 'E - Earnings Note', value: document.getElementById('earningsNote').value },
-                { label: 'A - Alignment Note', value: document.getElementById('alignmentNote').value },
-                { label: 'L - Learning Note', value: document.getElementById('learningNote').value },
-                { label: 'I - Improvement Note', value: document.getElementById('improvementNote').value },
-                { label: 'S - Sorry Note', value: document.getElementById('sorryNote').value },
-                { label: 'T - Tomorrow Plan', value: document.getElementById('tomorrowPlan').value },
-            ];
-
-            realistData.forEach(item => {
-                const cleanedValue = item.value.replace(/"/g, '""');
-                const escapedValue = (cleanedValue.includes(',') || cleanedValue.includes('\n') || cleanedValue.includes('"')) ? `"${cleanedValue}"` : cleanedValue;
-                csv.push(`${item.label},${escapedValue}`);
-            });
-            
-
-            const csvString = csv.join('\n');
-            const filename = `TradingLog_${new Date().toLocaleDateString('en-CA').replace(/-/g, '')}.csv`;
-            
-            // Create a Blob and a temporary link to trigger the download
-            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            
-            if (link.download !== undefined) { 
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url); // Clean up
-            } else {
-                // Fallback for older browsers
-                alert("Your browser does not support automatic downloads. Please copy the data manually.");
-            }
-        }
-        // --- END EXPORT FUNCTION ---
 
         function createTradeRows() {
             const tbody = document.getElementById('trade-rows');
