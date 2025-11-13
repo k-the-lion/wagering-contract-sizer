@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20-Minute Trader - Wagering & Position Sizer</title>
+    <title>Wagering & Position Sizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -81,6 +81,13 @@
         body.dark-mode .bg-white, body.dark-mode .bg-blue-50 {
             background-color: #4b5563 !important;
         }
+        /* Instruction Box Dark Mode Override */
+        body.dark-mode .instruction-box {
+            background-color: #1f2937 !important; /* Very dark background for contrast */
+            border-color: #3b82f6 !important; /* Blue border */
+            color: #dbeafe !important; /* Very light blue text */
+        }
+        /* Standard element overrides */
         body.dark-mode .table-cell {
             border-color: #4b5563;
         }
@@ -121,14 +128,14 @@
             </button>
         </header>
         
-        <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+        <div class="mt-2 p-3 bg-blue-100 border border-blue-200 rounded-lg text-sm text-blue-900 instruction-box">
             <h2 class="font-semibold mb-1">How to Use This Tool:</h2>
             <ol class="list-decimal list-inside space-y-1">
                 <li><strong>Set Up Your Day:</strong> Enter your account and trade parameters in the boxes above.</li>
-                <li>**Log Trades:** After each trade, enter the P/L and log a **Screenshot Link** and **Notes** in the log below.</li>
-                <li>**Complete Journal:** At the end of the session, fill out the **R.E.A.L.I.S.T. Journal** questions at the bottom.</li>
-                <li><strong>Export Data:</strong> Click the **Download buttons** to save your filtered Trade Log and separate Journal entries.</li>
-                <li><strong>Reset:</strong> Refresh the page to start a new day.</li>
+                <li><strong>Trade Log:</strong> After each trade, enter the P/L and log a Screenshot Link and Notes in the log below.</li>
+                <li><strong>Journal:</strong> At the end of the session, fill out the R.E.A.L.I.S.T. Journal questions at the bottom.</li>
+                <li><strong>Export Data:</strong> Click the Download buttons to save your filtered Trade Log and separate Journal entries.</li>
+                <li><strong>Reset:</strong> Refresh the page to clear it all and start a new day.</li>
             </ol>
         </div>
 
