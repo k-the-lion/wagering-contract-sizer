@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wagering Calculator</title>
+    <title>20-Minute Trader - Wagering & Position Sizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -18,12 +18,17 @@
             background-color: #f9fafb;
             font-weight: 600;
         }
-        input[type="number"], select {
+        input[type="number"], input[type="text"], select, textarea {
             border-radius: 0.375rem;
             border: 1px solid #d1d5db;
             padding: 0.5rem;
             width: 100%;
             box-sizing: border-box;
+        }
+        /* Style for new text/journal fields */
+        .journal-input {
+            text-align: left;
+            padding-left: 0.5rem;
         }
         .lockout-red {
             color: #dc2626;
@@ -39,6 +44,18 @@
             background-color: #f3f4f6;
             opacity: 0.7;
         }
+        /* Custom style for the rating select box */
+        #ratingScore {
+            max-width: 100px;
+            text-align: center;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%236b7280' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 8px 10px;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,11 +68,11 @@
             <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
                 <h2 class="font-semibold mb-1">How to Use This Tool:</h2>
                 <ol class="list-decimal list-inside space-y-1">
-                    <li><strong>Set Up Your Day:</strong> In the "Account Setup" and "Trade Setup" boxes, enter your daily account balance, loss limit, and the point range for your trades.</li>
-                    <li><strong>Configure Strategy:</strong> Adjust the "Ladder Logic" and "Sizing Parameters" to match your preferred trading style.</li>
-                    <li><strong>Get Position Size:</strong> The tool will instantly calculate your <strong>TP/SL Settings ($)</strong> and the correct <strong>Number of Contracts</strong>.</li>
-                    <li><strong>Log Trades:</strong> After each trade, enter the final P/L in the "Actual Result ($)" column in the Trade Log below.</li>
-                    <li><strong>Reset for New Day:</strong> When you are finished, simply refresh the page to start a new session.</li>
+                    <li><strong>Set Up Your Day:</strong> Enter your account and trade parameters in the boxes above.</li>
+                    <li>**Log Trades:** After each trade, enter the P/L and log a **Screenshot Link** and **Notes** in the log below.</li>
+                    <li>**Complete Journal:** At the end of the session, fill out the **R.E.A.L.I.S.T. Journal** questions at the bottom.</li>
+                    <li><strong>Export Data:</strong> Click the **Download Results (CSV)** button to save all data and journal entries.</li>
+                    <li><strong>Reset:</strong> Refresh the page to start a new day.</li>
                 </ol>
             </div>
         </header>
@@ -145,9 +162,17 @@
         </div>
 
         <div class="mt-8 pt-6 border-t">
-             <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Trade Log</h2>
+             <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Trade Log</h2>
+                 <button 
+                     id="downloadCsvButton"
+                     onclick="exportTableToCSV()" 
+                     class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out text-sm">
+                     Download Results (CSV)
+                 </button>
+             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 border">
+                <table class="min-w-full divide-y divide-gray-200 border" id="tradeLogTable">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="table-cell header-cell w-16">Trade #</th>
@@ -155,6 +180,8 @@
                             <th class="table-cell header-cell bg-blue-100">Actual Result ($)</th>
                             <th class="table-cell header-cell">Realized P&L ($)</th>
                             <th class="table-cell header-cell">Lockout</th>
+                            <th class="table-cell header-cell bg-gray-100">Screenshot Link</th>
+                            <th class="table-cell header-cell bg-gray-100">Notes / Rationale</th>
                         </tr>
                     </thead>
                     <tbody id="trade-rows" class="bg-white divide-y divide-gray-200">
@@ -162,6 +189,71 @@
                 </table>
             </div>
         </div>
+        
+        <hr class="mt-12 mb-6 border-gray-300">
+
+        <div class="mt-8 p-6 bg-gray-100 rounded-xl shadow-inner">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                THE R.E.A.L.I.S.T. JOURNAL 📝
+            </h2>
+            <div class="space-y-6">
+                <div class="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg text-red-600 mb-2">R - Rate</h3>
+                    <div class="flex items-center space-x-4 mb-3">
+                        <label for="ratingScore" class="block text-sm font-medium text-gray-700">Rating (1 to 5):</label>
+                        <select id="ratingScore" class="mt-1">
+                            <option value="5">5 - Excellent</option>
+                            <option value="4">4 - Good</option>
+                            <option value="3" selected>3 - Average</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Terrible</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ratingReason" class="block text-sm font-medium text-gray-700 mb-1">Why did you give it that score? (Source: Why did you give it that score?) [cite_start][cite: 6]</label>
+                        <textarea id="ratingReason" rows="2" class="journal-input" placeholder="My score reflects my discipline and market read..."></textarea>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg text-blue-600 mb-2">E - Earnings</h3>
+                    <label for="earningsNote" class="block text-sm font-medium text-gray-700 mb-1">Were you profitable today? [cite_start]If not, what was the loss and why? [cite: 8, 9]</label>
+                    <textarea id="earningsNote" rows="2" class="journal-input" placeholder="I was profitable by $X, or I lost $X because..."></textarea>
+                </div>
+                
+                <div class="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg text-emerald-600 mb-2">A - Alignment</h3>
+                    <label for="alignmentNote" class="block text-sm font-medium text-gray-700 mb-1">Did you follow your trading strategy today? [cite_start]If not, what caused you to go off-strategy? [cite: 11, 12]</label>
+                    <textarea id="alignmentNote" rows="2" class="journal-input" placeholder="Yes, I stuck to my plan, or No, fear/greed caused me to..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-white rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-lg text-amber-600 mb-2">L - Learning</h3>
+                        [cite_start]<label for="learningNote" class="block text-sm font-medium text-gray-700 mb-1">What did you learn from the market, your behavior, or your decisions today? [cite: 14]</label>
+                        <textarea id="learningNote" rows="3" class="journal-input" placeholder="The market respects the 9:45 AM pivot..."></textarea>
+                    </div>
+                    <div class="p-4 bg-white rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-lg text-purple-600 mb-2">I - Improvements</h3>
+                        <label for="improvementNote" class="block text-sm font-medium text-gray-700 mb-1">What could you have done better? [cite_start]How will you correct or prevent that? [cite: 16, 17]</label>
+                        <textarea id="improvementNote" rows="3" class="journal-input" placeholder="I should have waited for confirmation. Next time, I will..."></textarea>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg text-cyan-600 mb-2">S - Sorry</h3>
+                    <label for="sorryNote" class="block text-sm font-medium text-gray-700 mb-1">Do you regret any trades? [cite_start]What would you change if you could redo it? [cite: 19, 20]</label>
+                    <textarea id="sorryNote" rows="2" class="journal-input" placeholder="I regret Trade #4. I would change my stop-loss placement..."></textarea>
+                </div>
+
+                <div class="p-4 bg-white rounded-lg border border-gray-200">
+                    <h3 class="font-semibold text-lg text-pink-600 mb-2">T - Trading Plan (Tomorrow)</h3>
+                    <label for="tomorrowPlan" class="block text-sm font-medium text-gray-700 mb-1">What's your exact plan for tomorrow's trading? [cite_start]Be specific. [cite: 21, 22]</label>
+                    <textarea id="tomorrowPlan" rows="3" class="journal-input" placeholder="I will only trade between 9:30-10:00 AM, focusing on a breakout past 18550 with 2 contracts risked at $100 per trade..."></textarea>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -339,6 +431,90 @@
             calculateContracts();
         }
 
+
+        // --- FUNCTION TO EXPORT TABLE AND JOURNAL TO CSV ---
+        function exportTableToCSV() {
+            const table = document.getElementById('tradeLogTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+
+            // 1. Trade Log Data
+            // Loop through all rows (including header)
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const cols = row.querySelectorAll('td, th');
+                let rowData = [];
+
+                for (let j = 0; j < cols.length; j++) {
+                    const col = cols[j];
+                    let text = '';
+                    
+                    // Special handling for input fields
+                    if (i > 0) { 
+                        const input = col.querySelector('input');
+                        if (input) {
+                            text = input.value;
+                        } else {
+                            text = col.innerText.trim();
+                        }
+                    } else {
+                        text = col.innerText.trim();
+                    }
+
+                    // Clean and escape text for CSV
+                    text = text.replace(/"/g, '""'); 
+                    if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                        text = `"${text}"`;
+                    }
+                    rowData.push(text);
+                }
+                csv.push(rowData.join(','));
+            }
+
+            // 2. Add REALIST Journal Data
+            csv.push('\n\n--- R.E.A.L.I.S.T. JOURNAL ---');
+            
+            const realistData = [
+                { label: 'R - Rating', value: document.getElementById('ratingScore').value + ' - ' + document.getElementById('ratingScore').options[document.getElementById('ratingScore').selectedIndex].text },
+                { label: 'R - Rating Reason', value: document.getElementById('ratingReason').value },
+                { label: 'E - Earnings Note', value: document.getElementById('earningsNote').value },
+                { label: 'A - Alignment Note', value: document.getElementById('alignmentNote').value },
+                { label: 'L - Learning Note', value: document.getElementById('learningNote').value },
+                { label: 'I - Improvement Note', value: document.getElementById('improvementNote').value },
+                { label: 'S - Sorry Note', value: document.getElementById('sorryNote').value },
+                { label: 'T - Tomorrow Plan', value: document.getElementById('tomorrowPlan').value },
+            ];
+
+            realistData.forEach(item => {
+                const cleanedValue = item.value.replace(/"/g, '""');
+                const escapedValue = (cleanedValue.includes(',') || cleanedValue.includes('\n') || cleanedValue.includes('"')) ? `"${cleanedValue}"` : cleanedValue;
+                csv.push(`${item.label},${escapedValue}`);
+            });
+            
+
+            const csvString = csv.join('\n');
+            const filename = `TradingLog_${new Date().toLocaleDateString('en-CA').replace(/-/g, '')}.csv`;
+            
+            // Create a Blob and a temporary link to trigger the download
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) { 
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url); // Clean up
+            } else {
+                // Fallback for older browsers
+                alert("Your browser does not support automatic downloads. Please copy the data manually.");
+            }
+        }
+        // --- END EXPORT FUNCTION ---
+
         function createTradeRows() {
             const tbody = document.getElementById('trade-rows');
             for (let i = 1; i <= NUM_TRADES; i++) {
@@ -352,6 +528,12 @@
                     </td>
                     <td class="table-cell font-mono font-semibold"><span id="running-pl-${i}">0.00</span></td>
                     <td class="table-cell"><span id="lockout-${i}"></span></td>
+                    <td class="table-cell">
+                        <input type="text" id="screenshot-${i}" class="journal-input" placeholder="Paste link here..." maxlength="200">
+                    </td>
+                    <td class="table-cell">
+                        <input type="text" id="notes-${i}" class="journal-input" placeholder="Market structure, setup type, etc..." maxlength="200">
+                    </td>
                 `;
                 tbody.appendChild(row);
             }
@@ -360,7 +542,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             createTradeRows();
             
-            const inputs = document.querySelectorAll('input, select');
+            const inputs = document.querySelectorAll('input, select, textarea');
             inputs.forEach(input => input.addEventListener('input', calculate));
             
             calculate(); // Initial calculation
