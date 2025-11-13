@@ -8,6 +8,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition */
         }
         .table-cell {
             padding: 0.75rem;
@@ -24,6 +25,7 @@
             padding: 0.5rem;
             width: 100%;
             box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
         }
         /* Style for new text/journal fields */
         .journal-input {
@@ -56,6 +58,54 @@
             background-position: right 0.5rem center;
             background-size: 8px 10px;
         }
+
+        /* --- DARK MODE STYLES --- */
+        body.dark-mode {
+            background-color: #111827; /* Dark background */
+            color: #e5e7eb; /* Light text */
+        }
+        body.dark-mode .max-w-7xl {
+            background-color: #1f2937; /* Darker card background */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+        }
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 {
+            color: #f3f4f6;
+        }
+        body.dark-mode .border-gray-200, body.dark-mode .border {
+            border-color: #374151 !important;
+        }
+        body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 {
+            background-color: #374151 !important;
+            border-color: #4b5563;
+        }
+        body.dark-mode .bg-white, body.dark-mode .bg-blue-50 {
+            background-color: #4b5563 !important;
+        }
+        body.dark-mode .table-cell {
+            border-color: #4b5563;
+        }
+        body.dark-mode .header-cell {
+            background-color: #374151;
+            color: #f3f4f6;
+        }
+        body.dark-mode input[type="number"], body.dark-mode input[type="text"], body.dark-mode select, body.dark-mode textarea {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            border-color: #4b5563;
+        }
+        body.dark-mode .text-gray-700 {
+            color: #d1d5db; /* Lighter labels */
+        }
+        body.dark-mode .text-gray-800, body.dark-mode .text-gray-900 {
+            color: #f3f4f6;
+        }
+        body.dark-mode .disabled-row {
+            background-color: #1f2937;
+            opacity: 0.5;
+        }
+        body.dark-mode #ratingScore {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23f3f4f6' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e"); /* Lighten dropdown arrow */
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,21 +113,26 @@
 </head>
 <body class="bg-gray-50 text-gray-800 p-4 sm:p-6 md:p-8">
     <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-6">
-        <header class="mb-6 pb-4 border-b border-gray-200">
+        <header class="mb-6 pb-4 border-b border-gray-200 flex justify-between items-center">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">20-Minute Trader — Wagering & Position Sizer</h1>
-            <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                <h2 class="font-semibold mb-1">How to Use This Tool:</h2>
-                <ol class="list-decimal list-inside space-y-1">
-                    <li><strong>Set Up Your Day:</strong> Enter your account and trade parameters in the boxes above.</li>
-                    <li>**Log Trades:** After each trade, enter the P/L and log a **Screenshot Link** and **Notes** in the log below.</li>
-                    <li>**Complete Journal:** At the end of the session, fill out the **R.E.A.L.I.S.T. Journal** questions at the bottom.</li>
-                    <li><strong>Export Data:</strong> Click the **Download buttons** to save your filtered Trade Log and separate Journal entries.</li>
-                    <li><strong>Reset:</strong> Refresh the page to start a new day.</li>
-                </ol>
-            </div>
+            <button id="darkModeToggle" onclick="toggleDarkMode()" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition duration-150">
+                <svg id="sunIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moonIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
         </header>
+        
+        <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+            <h2 class="font-semibold mb-1">How to Use This Tool:</h2>
+            <ol class="list-decimal list-inside space-y-1">
+                <li><strong>Set Up Your Day:</strong> Enter your account and trade parameters in the boxes above.</li>
+                <li>**Log Trades:** After each trade, enter the P/L and log a **Screenshot Link** and **Notes** in the log below.</li>
+                <li>**Complete Journal:** At the end of the session, fill out the **R.E.A.L.I.S.T. Journal** questions at the bottom.</li>
+                <li><strong>Export Data:</strong> Click the **Download buttons** to save your filtered Trade Log and separate Journal entries.</li>
+                <li><strong>Reset:</strong> Refresh the page to start a new day.</li>
+            </ol>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6 mt-6">
             <div class="bg-gray-50 p-4 rounded-lg border">
                 <h3 class="font-semibold text-lg mb-3">Account Setup</h3>
                 <div class="space-y-3">
@@ -265,6 +320,34 @@
     </div>
 
     <script>
+        // --- DARK MODE LOGIC START ---
+        function toggleDarkMode() {
+            const body = document.body;
+            const isDarkMode = body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+            updateToggleIcon(isDarkMode);
+        }
+
+        function updateToggleIcon(isDarkMode) {
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            if (sunIcon && moonIcon) {
+                sunIcon.classList.toggle('hidden', isDarkMode);
+                moonIcon.classList.toggle('hidden', !isDarkMode);
+            }
+        }
+
+        function loadDarkModePreference() {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                updateToggleIcon(true);
+            } else {
+                updateToggleIcon(false);
+            }
+        }
+        // --- DARK MODE LOGIC END ---
+
+
         const NUM_TRADES = 50;
 
         // Utility function for downloading CSV
@@ -315,7 +398,8 @@
             // 2. Get Data Rows (Only those with Actual Result)
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                const resultInput = row.querySelector(`#result-${i}`);
+                // Note: The ID of the input matches the row index, starting at 1
+                const resultInput = row.querySelector(`#result-${i}`); 
                 
                 // Check if the 'Actual Result ($)' input is filled. If not, skip the row.
                 if (!resultInput || resultInput.value.trim() === '') {
@@ -374,6 +458,7 @@
                     value = element.value;
                 }
                 
+                // Need to use temporary objects to pass values to getCleanedValue
                 csv.push(`${getCleanedValue({innerText: item.label})},${getCleanedValue({value: value})}`);
             });
             
@@ -583,6 +668,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            loadDarkModePreference(); // Load preference on start
             createTradeRows();
             
             const inputs = document.querySelectorAll('input, select, textarea');
