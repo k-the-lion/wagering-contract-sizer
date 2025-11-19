@@ -192,22 +192,19 @@
                 <h3 class="font-semibold text-lg mb-3">Trade Setup</h3>
                 <div class="space-y-3">
                     <div>
-                        <label for="tickerSelect" class="block text-sm font-medium text-gray-700">Futures Ticker</label>
-                        <select id="tickerSelect" class="mt-1">
-                            <option value="MNQ">MNQ (Micro Nasdaq 100)</option>
-                            <option value="MES">MES (Micro S&P 500)</option>
-                            <option value="MGC">MGC (Micro Gold)</option>
-                            <option value="MYM">MYM (Micro Dow Jones)</option>
-                            <option value="MCL">MCL (Micro Crude Oil)</option>
-                        </select>
-                    </div>
-                    <div>
                         <label for="tradeRange" class="block text-sm font-medium text-gray-700">Trade Range (Points)</label>
                         <input type="number" id="tradeRange" value="10" class="mt-1">
                     </div>
-                     <div class="text-sm text-gray-500 pt-2">
-                        <p>Point Value is: <strong id="pointValueDisplay">$2.00</strong></p>
-                    </div>
+                    <div>
+                        <label for="tickerSelect" class="block text-sm font-medium text-gray-700">Contract</label>
+                        <select id="tickerSelect" class="mt-1">
+                            <option value="MNQ" selected>MNQ (Micro Nasdaq) - $2/pt</option>
+                            <option value="MES">MES (Micro S&P) - $5/pt</option>
+                            <option value="MGC">MGC (Micro Gold) - $10/pt</option>
+                            <option value="MCL">MCL (Micro Crude) - $1/pt</option>
+                            <option value="MYM">MYM (Micro Dow) - $0.50/pt</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="bg-gray-50 p-4 rounded-lg border">
@@ -361,17 +358,6 @@
     </div>
 
     <script>
-        // --- Ticker Configuration ---
-        const TICKER_CONFIG = {
-            'MNQ': { name: 'Micro Nasdaq 100', pointValue: 2.00 },
-            'MES': { name: 'Micro S&P 500', pointValue: 5.00 },
-            'MGC': { name: 'Micro Gold', pointValue: 10.00 },
-            'MYM': { name: 'Micro Dow Jones', pointValue: 0.50 },
-            'MCL': { name: 'Micro Crude Oil', pointValue: 1.00 }
-        };
-        // --- Ticker Configuration End ---
-
-
         // --- DARK MODE LOGIC START ---
         function toggleDarkMode() {
             const body = document.body;
@@ -399,12 +385,20 @@
         }
         // --- DARK MODE LOGIC END ---
 
+        // ADDED TICKER CONSTANTS HERE
+        const TICKER_VALUES = {
+            "MNQ": 2.00,
+            "MES": 5.00,
+            "MGC": 10.00,
+            "MCL": 1.00,
+            "MYM": 0.50
+        };
 
         const NUM_TRADES = 50;
         const INPUT_ELEMENT_IDS = [
             // Settings
             'currentBalance', 'maxLossLimit', 'lossLockoutPercent', 'tradeRange', 'autoLadder', 
-            'minProfitToKeep', 'lockInPercent', 'roundDown', 'feePerContract', 'tickerSelect',
+            'minProfitToKeep', 'lockInPercent', 'roundDown', 'feePerContract', 'tickerSelect', // Added tickerSelect here
             // R.E.A.L.I.S.T. Journal
             'ratingScore', 'ratingReason', 'earningsNote', 'alignmentNote', 'learningNote', 
             'improvementNote', 'sorryNote', 'tomorrowPlan',
@@ -579,13 +573,16 @@
             
             // Set session date to today for the new day
             document.getElementById('sessionDate').value = new Date().toISOString().substring(0, 10);
-            document.getElementById('tickerSelect').value = 'MNQ'; // Reset to default
+
 
             // 4. Re-calculate to show the clean log and reset Trade #1's recommended size
             calculate();
 
             alert("New Trading Day Started. The R.E.A.L.I.S.T. history is saved!");
         }
+
+        // --- FUNCTION REMOVED ---
+        // function clearAllSavedData() { ... }
 
         // --- END SESSION MANAGEMENT LOGIC ---
 
@@ -624,12 +621,10 @@
         function exportTradeLogToCSV() {
             let csv = [];
             const sessionDate = document.getElementById('sessionDate').value || 'N/A';
-            const ticker = document.getElementById('tickerSelect').value;
 
             // 1. Define Header Row (Hardcoded for stability)
             const headerData = [
                 'Date',
-                'Ticker',
                 'Trade #',
                 'Recommended TP/SL ($)',
                 'Actual Result ($)',
@@ -653,7 +648,6 @@
                     // Get row data directly by ID
                     let rowData = [
                         sessionDate,
-                        ticker,
                         i, // Trade #
                         document.getElementById(`recommended-tpsl-${i}`).innerText,
                         resultInput.value,
@@ -725,12 +719,6 @@
             return document.getElementById(id).value === 'true';
         }
         
-        function updatePointValueDisplay() {
-            const ticker = document.getElementById('tickerSelect').value;
-            const pointValue = TICKER_CONFIG[ticker] ? TICKER_CONFIG[ticker].pointValue : 0;
-            document.getElementById('pointValueDisplay').textContent = `$${pointValue.toFixed(2)} for ${ticker}`;
-        }
-
         function calculateContracts() {
             const dollarRiskText = document.getElementById('nextTradeSize').textContent;
             if (dollarRiskText === "LOCKED OUT") {
@@ -740,8 +728,9 @@
 
             const dollarRisk = parseFloat(dollarRiskText) || 0;
             const tradeRange = getFloatValue('tradeRange');
-            const ticker = document.getElementById('tickerSelect').value;
-            const pointValue = TICKER_CONFIG[ticker] ? TICKER_CONFIG[ticker].pointValue : 0; // Use selected point value
+            
+            // REPLACED HARDCODED VALUE
+            const pointValue = TICKER_VALUES[document.getElementById('tickerSelect').value] || 2;
 
             const riskPerContract = tradeRange * pointValue;
             
@@ -753,13 +742,6 @@
         }
 
         function calculate() {
-            // Update the display of the Point Value immediately
-            updatePointValueDisplay();
-            
-            // Get the Ticker's Point Value
-            const ticker = document.getElementById('tickerSelect').value;
-            const pointValue = TICKER_CONFIG[ticker] ? TICKER_CONFIG[ticker].pointValue : 0;
-
             // Get all parameters
             const currentBalance = getFloatValue('currentBalance');
             const maxLossLimit = getFloatValue('maxLossLimit');
@@ -798,7 +780,11 @@
                 let recommendedTpsl = 0;
                 if (!isLockedOut) {
                     const tradeRange = getFloatValue('tradeRange');
-                    const riskPerContract = tradeRange * pointValue; // Uses dynamic pointValue
+
+                    // REPLACED HARDCODED VALUE
+                    const pointValue = TICKER_VALUES[document.getElementById('tickerSelect').value] || 2;
+
+                    const riskPerContract = tradeRange * pointValue;
 
                     let rawRisk = 0;
                     
@@ -875,7 +861,11 @@
                     // Logic for the next trade size if all 50 log rows are filled
                     const lastRunningPL = parseFloat(document.getElementById(`running-pl-${NUM_TRADES}`).textContent) || 0;
                     const tradeRange = getFloatValue('tradeRange');
-                    const riskPerContract = tradeRange * pointValue; // Uses dynamic pointValue
+
+                    // REPLACED HARDCODED VALUE
+                    const pointValue = TICKER_VALUES[document.getElementById('tickerSelect').value] || 2;
+
+                    const riskPerContract = tradeRange * pointValue;
                     
                     let rawRisk = 0;
 
