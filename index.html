@@ -192,11 +192,25 @@
                 <h3 class="font-semibold text-lg mb-3">Trade Setup</h3>
                 <div class="space-y-3">
                     <div>
+                        <label for="tickerSelect" class="block text-sm font-medium text-gray-700">Contract Ticker</label>
+                        <select id="tickerSelect" class="mt-1">
+                            <option value="MNQ" selected>MNQ (Micro Nasdaq)</option>
+                            <option value="MES">MES (Micro ES)</option>
+                            <option value="MGC">MGC (Micro Gold)</option>
+                            <option value="MYM">MYM (Micro Dow)</option>
+                            <option value="M2K">M2K (Micro Russell)</option>
+                            <option value="NQ">NQ (E-mini Nasdaq)</option>
+                            <option value="ES">ES (E-mini ES)</option>
+                            <option value="CL">CL (Crude Oil)</option>
+                            <option value="GC">GC (Gold)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label for="tradeRange" class="block text-sm font-medium text-gray-700">Trade Range (Points)</label>
                         <input type="number" id="tradeRange" value="10" class="mt-1">
                     </div>
                      <div class="text-sm text-gray-500 pt-2">
-                        <p>Point Value is fixed at $2.00 for MNQ.</p>
+                        <p id="pointValueDisplay">Point Value: $2.00 for MNQ</p>
                     </div>
                 </div>
             </div>
@@ -351,6 +365,19 @@
     </div>
 
     <script>
+        // --- CONFIG FOR CONTRACTS ---
+        const CONTRACT_SPECS = {
+            'MNQ': { name: 'Micro Nasdaq', pointValue: 2 },
+            'MES': { name: 'Micro ES', pointValue: 5 },
+            'MGC': { name: 'Micro Gold', pointValue: 10 },
+            'MYM': { name: 'Micro Dow', pointValue: 0.5 },
+            'M2K': { name: 'Micro Russell', pointValue: 5 },
+            'NQ':  { name: 'E-mini Nasdaq', pointValue: 20 },
+            'ES':  { name: 'E-mini ES', pointValue: 50 },
+            'CL':  { name: 'Crude Oil', pointValue: 1000 }, // $10 per tick (0.01) = $1000 per point
+            'GC':  { name: 'Gold', pointValue: 100 }
+        };
+
         // --- DARK MODE LOGIC START ---
         function toggleDarkMode() {
             const body = document.body;
@@ -382,7 +409,8 @@
         const NUM_TRADES = 50;
         const INPUT_ELEMENT_IDS = [
             // Settings
-            'currentBalance', 'maxLossLimit', 'lossLockoutPercent', 'tradeRange', 'autoLadder', 
+            'currentBalance', 'maxLossLimit', 'lossLockoutPercent', 
+            'tickerSelect', 'tradeRange', 'autoLadder', 
             'minProfitToKeep', 'lockInPercent', 'roundDown', 'feePerContract',
             // R.E.A.L.I.S.T. Journal
             'ratingScore', 'ratingReason', 'earningsNote', 'alignmentNote', 'learningNote', 
@@ -566,9 +594,6 @@
             alert("New Trading Day Started. The R.E.A.L.I.S.T. history is saved!");
         }
 
-        // --- FUNCTION REMOVED ---
-        // function clearAllSavedData() { ... }
-
         // --- END SESSION MANAGEMENT LOGIC ---
 
 
@@ -713,7 +738,12 @@
 
             const dollarRisk = parseFloat(dollarRiskText) || 0;
             const tradeRange = getFloatValue('tradeRange');
-            const pointValue = 2; // Hardcoded for MNQ
+            
+            // --- NEW LOGIC FOR CONTRACTS ---
+            const ticker = document.getElementById('tickerSelect').value;
+            const spec = CONTRACT_SPECS[ticker] || CONTRACT_SPECS['MNQ'];
+            const pointValue = spec.pointValue;
+            // -------------------------------
 
             const riskPerContract = tradeRange * pointValue;
             
@@ -734,6 +764,15 @@
             const minProfitToKeep = getFloatValue('minProfitToKeep');
             const lockInPercent = getFloatValue('lockInPercent');
             const feePerContract = getFloatValue('feePerContract');
+            
+            // --- NEW LOGIC FOR CONTRACTS ---
+            const ticker = document.getElementById('tickerSelect').value;
+            const spec = CONTRACT_SPECS[ticker] || CONTRACT_SPECS['MNQ'];
+            const pointValue = spec.pointValue;
+            
+            // Update Helper Text
+            document.getElementById('pointValueDisplay').innerText = `Point Value: $${pointValue.toFixed(2)} for ${ticker}`;
+            // -------------------------------
 
             // Initial calculations
             const fullStack = currentBalance - maxLossLimit;
@@ -763,7 +802,6 @@
                 let recommendedTpsl = 0;
                 if (!isLockedOut) {
                     const tradeRange = getFloatValue('tradeRange');
-                    const pointValue = 2; // Hardcoded
                     const riskPerContract = tradeRange * pointValue;
 
                     let rawRisk = 0;
@@ -841,7 +879,6 @@
                     // Logic for the next trade size if all 50 log rows are filled
                     const lastRunningPL = parseFloat(document.getElementById(`running-pl-${NUM_TRADES}`).textContent) || 0;
                     const tradeRange = getFloatValue('tradeRange');
-                    const pointValue = 2; // Hardcoded
                     const riskPerContract = tradeRange * pointValue;
                     
                     let rawRisk = 0;
